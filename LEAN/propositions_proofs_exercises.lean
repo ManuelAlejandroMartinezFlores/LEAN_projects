@@ -230,7 +230,8 @@ example : (p → r ∨ s) → ((p → r) ∨ (p → s)) :=
           (fun hr : r => show (p → r) ∨ (p → s) from Or.inl (fun hp => hr))
           (fun hs : s => show (p → r) ∨ (p → s) from Or.inr (fun hp => hs)))
       (fun hnp : ¬p => 
-        sorry)
+        have hpr : p → r := (fun hp => absurd hp hnp)
+        show (p → r) ∨ (p → s) from Or.inl hpr)
 
 
 
@@ -246,7 +247,20 @@ example : ¬(p ∧ q) → ¬p ∨ ¬q :=
 
 example : ¬(p → q) → p ∧ ¬q := 
   fun h : ¬(p → q) =>
-    sorry
+    Classical.byCases
+      (fun hp : p => 
+        Classical.byCases
+          (fun hq : q => absurd (fun hp => hq) h)
+          (fun hnq : ¬q => And.intro hp hnq))
+      (fun hnp : ¬p => 
+        Classical.byCases
+          (fun hq : q =>
+            have hpq : p → q := (fun hp => hq)
+            absurd hpq h)
+          (fun hnq : ¬q =>
+            have hpq : p → q := 
+              (fun hp : p => absurd hp hnp)
+            absurd hpq h))
 
 example : (p → q) → (¬p ∨ q) := 
   fun h : p → q =>
@@ -271,6 +285,12 @@ example : p ∨ ¬p :=
 
 example : (((p → q) → p) → p) := 
   fun h : (p → q) → p =>
-    sorry
+    Classical.byCases
+      (fun hpq : p → q => h hpq)
+      (fun hnpq : ¬ (p → q) =>
+        Classical.byContradiction
+          (fun hnp : ¬ p => 
+           have hpq : p → q := (fun hp : p => absurd hp hnp)
+           show False from hnpq hpq))
     
     
