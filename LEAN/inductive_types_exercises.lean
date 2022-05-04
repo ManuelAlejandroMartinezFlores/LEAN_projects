@@ -342,8 +342,6 @@ namespace hidden1
         _ = reverse bs ** (reverse as ** (cons a nil)) := by simp [append_assoc]
         _ = reverse bs ** reverse (cons a as) := by simp [reverse]
 
-    theorem reverse_rev_element (a : α) : reverse (cons a nil) = cons a nil := by 
-      rfl
   
     theorem reverse_rev (as : List α) : reverse (reverse as) = as := by 
       induction as with 
