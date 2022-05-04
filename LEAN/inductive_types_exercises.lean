@@ -247,12 +247,117 @@ namespace hidden
       intro he
       admit 
 
-      
-    
-        
-
-
     #check Eq.symm 
 
   end Nat
 end hidden 
+
+
+/-
+Define some operations on lists, like a length function or the reverse function. Prove some properties, such as the following:
+
+a. length (s ++ t) = length s + length t
+
+b. length (reverse t) = length t
+
+c. reverse (reverse t) = t
+-/
+
+namespace hidden1
+
+  inductive List (α : Type u) where 
+  | nil : List α 
+  | cons : α → List α → List α 
+  deriving Repr
+
+  namespace List
+
+    def length (as : List α) : Nat :=
+      match as with 
+      | nil => 0
+      | cons a as' => length as' + 1
+
+    def append (as bs : List α) : List α :=
+      match as with 
+      | nil => bs 
+      | cons a as' => cons a (append as' bs)
+
+    notation:66 as:66 "**" bs:67 => append as bs
+
+    theorem nil_append (as : List α) : nil ** as = as := by rfl 
+
+    theorem cons_append (as bs : List α) (a : α) 
+        : cons a (as ** bs) = (cons a as) ** bs := by rfl
+
+    theorem append_nil (as : List α) : as ** nil = as := by 
+      induction as with 
+      | nil => rfl 
+      | cons a as ih => calc
+        (cons a as) ** nil = cons a (as ** nil) := by simp only [cons_append]
+        _ = cons a as := by simp only [ih]
+
+    theorem append_assoc (as bs cs : List α) 
+        : (as ** bs) ** cs = as ** (bs ** cs) := by 
+      induction as with 
+      | nil => rfl 
+      | cons a as ih => calc 
+        ((cons a as) ** bs) ** cs = (cons a (as ** bs)) ** cs := by simp only [cons_append]
+        _ = cons a ((as ** bs) ** cs) := by simp only [cons_append]
+        _ = cons a (as ** (bs ** cs)) := by simp only [ih]
+        _ = ((cons a as) ** (bs ** cs)) := by simp only [cons_append]
+
+    theorem length_dist (as bs : List α) : length (as ** bs) = length as + length bs := by 
+      induction as with 
+      | nil => simp [length, nil_append]
+      | cons a as ih => calc 
+        length ((cons a as) ** bs) = length (cons a (as ** bs)) := by simp only [cons_append]
+        _ = length (as ** bs) + 1 := by simp only [length]
+        _ = length as + length bs + 1 := by simp only [ih]
+        _ = length (cons a as) + length bs := by simp_arith only [length]
+
+    def reverse (as : List α) :=
+      match as with 
+      | nil => as
+      | cons a as' => (reverse as') ** (cons a nil)
+
+
+    theorem length_reverse (as : List α)
+        : length (reverse as) = length as := by 
+      induction as with 
+      | nil => rfl 
+      | cons a as ih => calc 
+        length (reverse (cons a as)) = length ((reverse as) ** (cons a nil)) := by simp [reverse]
+        _ = length (reverse as) + length (cons a nil) := by simp [length_dist]
+        _ = length as + 1 := by simp [length, ih]
+
+    theorem reverse_append (as bs : List α)
+        : reverse (as ** bs) = reverse bs ** reverse as := by 
+      induction as with 
+      | nil => simp [reverse, append_nil]; rfl 
+      | cons a as ih => calc 
+        reverse ((cons a as) ** bs) = reverse (cons a (as ** bs)) := by 
+          simp only [cons_append]
+        _ = (reverse (as ** bs)) ** (cons a nil) := by simp [reverse]
+        _ = (reverse bs ** reverse as) ** (cons a nil) := by simp [ih]
+        _ = reverse bs ** (reverse as ** (cons a nil)) := by simp [append_assoc]
+        _ = reverse bs ** reverse (cons a as) := by simp [reverse]
+
+    theorem reverse_rev_element (a : α) : reverse (cons a nil) = cons a nil := by 
+      rfl
+  
+    theorem reverse_rev (as : List α) : reverse (reverse as) = as := by 
+      induction as with 
+      | nil => rfl 
+      | cons a as ih => calc 
+        reverse (reverse (cons a as)) = reverse ((reverse as) ** (cons a nil)) := by
+          simp only [reverse]
+        _ = reverse (cons a nil) ** reverse (reverse as) := by simp [reverse_append]
+        _ = reverse (cons a nil) ** as := by simp [ih]
+        _ = (cons a nil) ** as := by rfl
+        _ = cons a as := by rfl
+      
+
+  end List
+
+
+end hidden1
