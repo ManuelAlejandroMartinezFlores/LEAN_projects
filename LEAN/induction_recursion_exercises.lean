@@ -315,12 +315,91 @@ namespace hidden
     def root (n b a : Nat) : Prop := a ^ n = b
 
     theorem root_cancel : root n (b ^ n) b := by rfl
-
-
-        
-
-    
-
   end Nat
-
 end hidden
+
+/- Operation over Vectors -/
+
+namespace hidden2 
+
+  inductive Vector (α : Type u) : Nat → Type u where 
+  | nil : Vector α 0 
+  | cons : α → {n : Nat} → Vector α n → Vector α (n + 1)
+  deriving Repr
+
+  namespace Vector
+
+  def head : {n : Nat} → Vector α (n + 1) → α 
+    | _, cons a as => a 
+
+  def tail : {n : Nat} → Vector α (n + 1) → Vector α n
+    | _, cons a as => as
+
+  def appendAux (h : m = n) (vs : Vector α m) : Vector α n := by 
+    simp [h] at vs; assumption
+
+
+  def append {m n : Nat} (as : Vector α m) (bs : Vector α n) : Vector α (m + n) := by
+    match m, as with 
+    | 0, nil => 
+      have : n = 0 + n := by simp_arith
+      exact appendAux this bs
+    | Nat.succ m, cons a as =>
+      have : (m + (n + 1) = (m + 1) + n) := by simp_arith [←Nat.add_assoc m 1 n]
+      exact appendAux this (cons a (append as bs)) 
+
+  #eval append (cons 1 (cons 2 nil)) (cons 4 (cons 5 nil)) -- 1 2 4 5
+
+  end Vector
+
+end hidden2
+
+
+/- Arithmetic Operations -/
+
+inductive Expr where
+| const : Nat → Expr
+| var : Nat → Expr 
+| plus : Expr → Expr → Expr 
+| times : Expr → Expr → Expr 
+deriving Repr
+
+namespace Expr
+
+  def sampleExpr : Expr := 
+    plus (times (var 0) (const 7)) (times (const 2) (var 1))
+
+  def eval (v : Nat → Nat) : Expr → Nat 
+    | const n => n 
+    | var n => v n 
+    | plus e f => (eval v e) + (eval v f)
+    | times e f => (eval v e) * (eval v f)
+
+  def sampleVal : Nat → Nat 
+    | 0 => 5
+    | 1 => 6 
+    | _ => 0
+
+  #eval eval sampleVal sampleExpr -- 47 
+
+  def simpConst : Expr → Expr 
+    | plus (const a) (const b) => const (a + b)
+    | times (const a) (const b) => const (a * b)
+    | e => e
+
+
+  theorem simpConst_eq (v : Nat → Nat) 
+      : ∀ e : Expr, eval v (simpConst e) = eval v e := by 
+    intro e
+    match e with 
+    | const n => rfl 
+    | var n => rfl 
+    | plus f g => admit 
+    | times f g => match f, g with 
+      | const m, const n => rfl 
+      | f, g => admit
+
+
+
+end Expr
+
