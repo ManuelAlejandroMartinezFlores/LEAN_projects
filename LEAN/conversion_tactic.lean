@@ -76,6 +76,59 @@ namespace ot
       . skip
       . tactic => exact h2 
 
-  
+
 
 end ot 
+
+
+namespace Nat 
+
+  inductive Tric  (x y: Nat) where 
+  | eq : x = y → Tric x y
+  | gt : (z : Nat) → (x = y + z ∧ z ≠ 0) → Tric x y
+  | lt : (z : Nat) → (y = x + z ∧ z ≠ 0) → Tric x y
+  
+  def e : 3 = 3 := by rfl
+  #check Tric.eq e -- Tric 3 3
+
+  def g : 5 = 3 + 2 ∧ 2 ≠ 0 := by 
+    constructor <;> simp  
+
+  #check Tric.gt 2 g -- Tric 5 3
+  #check g 
+
+
+  theorem tric_addition : ∀ (x y : Nat), Tric x y := by 
+    intro x y
+    induction x with  
+    | zero => match y with 
+      | zero => apply Tric.eq; rfl 
+      | succ y => 
+        have : succ y = 0 + succ y ∧ succ y ≠ 0 := by 
+          constructor <;> simp  
+        exact Tric.lt (succ y) this
+    | succ x ih => match ih with 
+      | Tric.eq e => 
+        have : succ x = y + 1 ∧ 1 ≠ 0 := by constructor <;> simp [e]
+        exact Tric.gt 1 this
+      | Tric.gt z h => 
+        have : succ x = y + (z + 1) ∧ (z + 1) ≠ 0 := by constructor <;> simp_arith [h.left]
+          exact Tric.gt (z + 1) this 
+      | Tric.lt z (And.intro he hz) => match z with
+        | zero => contradiction
+        | succ n => 
+          have h1 : y = succ x + n := by simp_arith [he]
+          match n with 
+          | zero => 
+            have : succ x = y := by simp_arith [h1]
+            exact Tric.eq this
+          | succ n => 
+            have : succ n ≠ 0 := by simp 
+            exact Tric.lt (succ n) (And.intro h1 this)
+
+  
+end Nat
+
+
+
+        
