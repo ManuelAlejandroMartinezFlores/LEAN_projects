@@ -14,7 +14,7 @@ begin
   begin
     refine min_fac_prime _,
     have : factorial N > 0 := factorial_pos N,
-    linarith
+    linarith,
   end,
 
   use p, -- Existencial
