@@ -282,4 +282,4 @@ end
 variables {α : Type*} [linear_order α]
 
 def converges_to' (s : α → ℝ) (a : ℝ) :=
-∀ ε > 0, ∃ N, ∀ n ≥ N, abs (s n - a) < ε
+∀ ε > 0, ∃ N, ∀ n ≥ N, abs (s n - a) < ε 
