@@ -120,3 +120,4 @@ theorem schroeder_bernstein {f : α → β} {g : β → α}
     (hf: injective f) (hg : injective g) :
   ∃ h : α → β, bijective h := 
 ⟨sb_fun f g, sb_injective f g hf hg, sb_surjective f g hf hg⟩
+
