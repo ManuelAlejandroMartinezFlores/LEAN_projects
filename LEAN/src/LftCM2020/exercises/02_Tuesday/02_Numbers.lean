@@ -128,7 +128,12 @@ if you have `h : ∀ (x y : T), R x y` and `a, b : T` in the context, then
 example (a b : ℕ) (h : nat.coprime a b) : ∃ u v : ℤ, u * a + v * b = 1 :=
 begin
   have := nat.gcd_eq_gcd_ab,
-  specialize this a b,
+  specialize this a b, 
+  unfold nat.coprime at h,
+  rw h at this,
+  norm_cast at this,
+  use [a.gcd_a b, a.gcd_b b],
+  rw this, ring,
 end
 
 
@@ -162,9 +167,38 @@ notation `|`x`|` := abs x
 def seq_limit (u : ℕ → ℝ) (l : ℝ) : Prop :=
 ∀ ε > 0, ∃ N, ∀ n ≥ N, |u n - l| ≤ ε
 
-
+-- n ≥ ⌈1 / ε⌉₊
 
 example : seq_limit (λ n : ℕ, (n+1)/n) 1 :=
 begin
-  sorry
+  intros ε epos,  
+  dsimp,
+  use nat.ceil (1 / ε),
+  intros n nge, 
+
+  have npos : 0 < n,
+    apply lt_of_lt_of_le,
+    show 0 < ⌈1 / ε⌉₊, 
+      rw nat.lt_ceil,
+      apply div_pos,
+      norm_num, from epos,
+    from nge,
+  have : (0 : ℝ) ≤ (n + 1) / n - 1,
+    norm_cast,
+    norm_num,
+    rw le_div_iff,
+    norm_num, norm_cast, from npos,
+    
+  simp [abs_of_nonneg this], norm_cast,
+  rw div_le_iff, simp [add_mul, add_comm _ (n : ℝ)], 
+  calc 
+    1 = ε * (1 / ε) : by { field_simp; rw div_self; from ne_of_gt epos, }
+    ... ≤ ε * nat.ceil (1 / ε) : 
+      by { apply mul_le_mul, apply le_refl, apply nat.le_ceil,
+          apply le_of_lt, apply div_pos, norm_num, from epos, from le_of_lt epos, }
+    ... ≤ ε * n : 
+      by { apply mul_le_mul, apply le_refl, norm_cast, from nge, 
+          norm_cast, apply nat.zero_le, from le_of_lt epos, },
+  norm_cast,
+  from npos,
 end
